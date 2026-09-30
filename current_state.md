@@ -6,7 +6,7 @@ Version 0.1 is the approved, stable baseline. It provides a responsive Leaflet/O
 
 Version 0.2 is the approved and validated stable baseline. It replaces the one-time request with `watchPosition()` so the displayed location can update without reloading. Tracking starts automatically when the page loads, with no manual Start/Stop controls. Each update moves the existing marker and accuracy circle and refreshes the coordinates, accuracy, and quality label. Dragging the map pauses automatic centering while location updates continue; reloading resumes following. The map uses OpenStreetMap's documented tile URL and recalculates its size when the map container changes.
 
-Version 0.3 is the current implementation on top of that baseline. After a valid position is received, Save Location can capture a frozen latitude, longitude, accuracy, and timestamp. A native dialog requests a name, and Save appends the named snapshot to the `locationMap.savedLocations` array in this browser's `localStorage`. Live tracking continues while the dialog is open. No saved-location list, export, or server storage is included.
+Version 0.3 is the current implementation on top of that baseline. After a valid position is received, Save Location can capture a frozen latitude, longitude, accuracy, and timestamp. A native dialog requests a name, and Save appends the named snapshot to the `locationMap.savedLocations` array in this browser's `localStorage`. A visible Saved locations counter reads that array on page load and updates after each successful save. Live tracking continues while the dialog is open. No saved-location list, export, or server storage is included.
 
 ## Testing and access
 

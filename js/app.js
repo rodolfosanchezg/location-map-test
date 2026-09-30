@@ -106,6 +106,10 @@ function getSavedLocations() {
   }
 }
 
+function updateSavedLocationsCount() {
+  document.getElementById("saved-locations-count").textContent = String(getSavedLocations().length);
+}
+
 function setSavedLocations(locations) {
   try {
     window.localStorage.setItem(savedLocationsKey, JSON.stringify(locations));
@@ -135,6 +139,7 @@ function saveLocationSnapshot(event) {
     return;
   }
 
+  updateSavedLocationsCount();
   closeSaveLocationDialog();
   document.getElementById("save-message").textContent = "Location saved";
 }
@@ -209,4 +214,5 @@ document.getElementById("cancel-save").addEventListener("click", closeSaveLocati
 document.getElementById("save-location-form").addEventListener("submit", saveLocationSnapshot);
 saveDialog.addEventListener("cancel", resetSaveLocationDialog);
 
+updateSavedLocationsCount();
 startLocationTracking();

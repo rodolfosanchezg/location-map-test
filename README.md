@@ -25,6 +25,7 @@ My Location Map is a lightweight browser geolocation test application. It uses H
 - Pressing it captures a frozen snapshot of the latest latitude, longitude, browser accuracy, and the time the button was pressed. Later tracking updates continue on the map but do not change the dialog snapshot.
 - A native dialog shows read-only coordinates and accuracy and asks for a required location name. Names are trimmed, must not be empty, and are limited to 80 characters. Cancel or Escape closes the dialog without saving.
 - Save appends a named record to the browser's `localStorage`, closes the dialog, and shows “Location saved”. No saved-location list or marker is added to the map.
+- The **Saved locations** counter shows how many named records exist in this browser's `localStorage`. It is calculated when the page loads and updates immediately after a successful save, so reloading the page can confirm that the count persisted.
 
 Saved locations use the `locationMap.savedLocations` key as a JSON array. Each record has `name`, numeric `latitude`, numeric `longitude`, numeric `accuracy`, and an ISO 8601 `timestamp`, ready for a possible future CSV export. The stored accuracy is the unrounded browser value; only the dialog display rounds it to the nearest meter.
 
@@ -128,6 +129,7 @@ The separate status message provides more detail. The map remains visible if geo
 - Added Save Location and a naming dialog.
 - Captures a frozen GPS snapshot when the button is pressed, while live tracking continues.
 - Stores named locations as browser-local records containing name, latitude, longitude, accuracy, and timestamp.
+- Shows a saved-location count derived from browser storage on load and after each successful save.
 - Uses an array structure suitable for a future CSV export; CSV export is not implemented.
 
 ## Known limitations

@@ -33,6 +33,10 @@ h1 {
   margin-bottom: 12px;
 }
 
+#saved-locations-line {
+  margin: 0 0 12px;
+}
+
 #save-message:not(:empty) {
   margin: 0 0 12px;
 }
