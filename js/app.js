@@ -17,12 +17,17 @@ function getAccuracyQuality(accuracy) {
 }
 
 const map = initializeMap();
+const savedLocationsKey = "locationMap.savedLocations";
+const saveDialog = document.getElementById("save-location-dialog");
+const locationNameInput = document.getElementById("location-name");
 let watchId = null;
 let usingStandardAccuracy = false;
 let receivedPosition = false;
 let locationMarker = null;
 let accuracyCircle = null;
 let followLocation = true;
+let latestPosition = null;
+let pendingSnapshot = null;
 
 map.on("dragstart", () => {
   followLocation = false;
@@ -35,6 +40,9 @@ if (window.ResizeObserver) {
 
 function handlePositionUpdate(position) {
   const { latitude, longitude, accuracy } = position.coords;
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+      !Number.isFinite(accuracy) || accuracy < 0) return;
+
   const coordinates = [latitude, longitude];
 
   if (locationMarker) {
@@ -49,12 +57,86 @@ function handlePositionUpdate(position) {
   }
 
   receivedPosition = true;
+  latestPosition = { latitude, longitude, accuracy };
+  document.getElementById("save-location").disabled = false;
   document.getElementById("latitude").textContent = latitude.toFixed(6);
   document.getElementById("longitude").textContent = longitude.toFixed(6);
   document.getElementById("accuracy").textContent = `±${Math.round(accuracy)} m`;
   document.getElementById("location-quality").textContent = getAccuracyQuality(accuracy);
   document.getElementById("tracking-status").textContent = "Tracking active";
   document.getElementById("status").textContent = "Your location was found.";
+}
+
+function captureLocationSnapshot() {
+  if (!latestPosition) return null;
+  return { ...latestPosition, timestamp: new Date().toISOString() };
+}
+
+function openSaveLocationDialog() {
+  if (!latestPosition || saveDialog.open) return;
+
+  pendingSnapshot = captureLocationSnapshot();
+  document.getElementById("snapshot-latitude").value = pendingSnapshot.latitude.toFixed(6);
+  document.getElementById("snapshot-longitude").value = pendingSnapshot.longitude.toFixed(6);
+  document.getElementById("snapshot-accuracy").value = `±${Math.round(pendingSnapshot.accuracy)} m`;
+  document.getElementById("save-message").textContent = "";
+  saveDialog.showModal();
+  locationNameInput.focus();
+}
+
+function resetSaveLocationDialog() {
+  pendingSnapshot = null;
+  locationNameInput.value = "";
+  document.getElementById("save-error").textContent = "";
+}
+
+function closeSaveLocationDialog() {
+  saveDialog.close();
+  resetSaveLocationDialog();
+}
+
+function getSavedLocations() {
+  try {
+    const stored = window.localStorage.getItem(savedLocationsKey);
+    if (!stored) return [];
+    const locations = JSON.parse(stored);
+    return Array.isArray(locations) ? locations : [];
+  } catch {
+    return [];
+  }
+}
+
+function setSavedLocations(locations) {
+  try {
+    window.localStorage.setItem(savedLocationsKey, JSON.stringify(locations));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function saveLocationSnapshot(event) {
+  event.preventDefault();
+  if (!pendingSnapshot) return;
+
+  const name = locationNameInput.value.trim();
+  if (!name || name.length > 80) {
+    document.getElementById("save-error").textContent =
+      "Enter a location name of up to 80 characters.";
+    locationNameInput.focus();
+    return;
+  }
+
+  const locations = getSavedLocations();
+  locations.push({ name, ...pendingSnapshot });
+  if (!setSavedLocations(locations)) {
+    document.getElementById("save-error").textContent =
+      "Could not save the location in this browser.";
+    return;
+  }
+
+  closeSaveLocationDialog();
+  document.getElementById("save-message").textContent = "Location saved";
 }
 
 function handleGeolocationError(error) {
@@ -121,5 +203,10 @@ function startLocationTracking() {
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   );
 }
+
+document.getElementById("save-location").addEventListener("click", openSaveLocationDialog);
+document.getElementById("cancel-save").addEventListener("click", closeSaveLocationDialog);
+document.getElementById("save-location-form").addEventListener("submit", saveLocationSnapshot);
+saveDialog.addEventListener("cancel", resetSaveLocationDialog);
 
 startLocationTracking();

@@ -6,7 +6,7 @@ My Location Map is a lightweight browser geolocation test application. It uses H
 
 ## Current version
 
-**Version 0.2 is the current approved and validated stable baseline.** Version 0.1 remains the approved baseline for the original one-time location behavior.
+**Version 0.3 is the current implementation.** Version 0.2 remains the approved and validated stable baseline; Version 0.1 remains the approved baseline for the original one-time location behavior.
 
 ## Version 0.2 functionality
 
@@ -18,6 +18,17 @@ My Location Map is a lightweight browser geolocation test application. It uses H
 - Centers on the first detected position and follows later positions until the user drags the map. Dragging pauses automatic centering while the marker, circle, and fields continue to update; reloading resumes following.
 - Shows a tracking status and handles common geolocation errors, unsupported geolocation, and insecure connections.
 - Uses responsive styling, an HTTPS OpenStreetMap tile URL, and map-size recalculation when the map container changes.
+
+## Version 0.3 functionality
+
+- **Save Location** becomes available after the first valid geolocation result.
+- Pressing it captures a frozen snapshot of the latest latitude, longitude, browser accuracy, and the time the button was pressed. Later tracking updates continue on the map but do not change the dialog snapshot.
+- A native dialog shows read-only coordinates and accuracy and asks for a required location name. Names are trimmed, must not be empty, and are limited to 80 characters. Cancel or Escape closes the dialog without saving.
+- Save appends a named record to the browser's `localStorage`, closes the dialog, and shows “Location saved”. No saved-location list or marker is added to the map.
+
+Saved locations use the `locationMap.savedLocations` key as a JSON array. Each record has `name`, numeric `latitude`, numeric `longitude`, numeric `accuracy`, and an ISO 8601 `timestamp`, ready for a possible future CSV export. The stored accuracy is the unrounded browser value; only the dialog display rounds it to the nearest meter.
+
+Saved locations remain only in that browser and device, for that site's origin. They are not uploaded to GitHub, written to `README.md` or a project CSV file, synchronized between devices, or stored on a server. Clearing the browser's site data may remove them. Malformed saved JSON is handled as an empty array when saving a new location. Version 0.3 does not export CSV.
 
 ## Accuracy classification
 
@@ -38,7 +49,7 @@ A desktop computer may report coarse positioning, including accuracy measured in
 
 ## Continuous tracking behavior
 
-Version 0.2 uses `navigator.geolocation.watchPosition()` and keeps one active watch ID internally. The browser and operating system determine when a new location update is produced; the application does not request positions at a fixed interval. Updates may slow or stop while the page is in the background.
+Versions 0.2 and 0.3 use `navigator.geolocation.watchPosition()` and keep one active watch ID internally. The browser and operating system determine when a new location update is produced; the application does not request positions at a fixed interval. Tracking continues while the Save Location dialog is open. Updates may slow or stop while the page is in the background.
 
 ## HTTPS requirement
 
@@ -56,7 +67,7 @@ Open `http://localhost:8000` on the same computer and allow location access. The
 
 ## GitHub Pages deployment
 
-Version 0.2 has been deployed and tested using GitHub Pages for HTTPS mobile testing. The general workflow is:
+Version 0.2 has been deployed and tested using GitHub Pages for HTTPS mobile testing. Version 0.3 remains a static site compatible with the same deployment approach. The general workflow is:
 
 ```text
 Local development → Git commit → Git push to main → GitHub Pages deployment → HTTPS mobile testing
@@ -112,6 +123,13 @@ The separate status message provides more detail. The map remains visible if geo
 - GitHub Pages deployment added for HTTPS mobile testing, and an outdoor/mobile testing workflow established.
 - Version 0.2 approved and validated as the stable baseline.
 
+### Version 0.3 — current implementation
+
+- Added Save Location and a naming dialog.
+- Captures a frozen GPS snapshot when the button is pressed, while live tracking continues.
+- Stores named locations as browser-local records containing name, latitude, longitude, accuracy, and timestamp.
+- Uses an array structure suitable for a future CSV export; CSV export is not implemented.
+
 ## Known limitations
 
 - Accuracy depends on the device, available positioning sources, and environment.
@@ -119,8 +137,8 @@ The separate status message provides more detail. The map remains visible if geo
 - Continuous high-accuracy geolocation may use additional battery power.
 - Mobile browsers and operating systems may limit background tracking.
 - OpenStreetMap tiles and the Leaflet CDN require internet access; public tile availability is best-effort.
-- No route history is stored. There is no backend or database, and no location data is persisted.
+- No route history is stored. There is no backend or database. Saved locations persist only in the current browser's site storage and may be removed if that site data is cleared.
 
 ## Out-of-scope features
 
-Version 0.2 does not include route history, breadcrumb trails, distance traveled, speed, heading visualization, saved positions, a backend, a database, user accounts, address lookup, route planning, or vehicle tracking. These are potential future-version features only.
+Version 0.3 does not include CSV export or import, a saved-location list, editing or deleting saved locations, saved-location markers, route history, breadcrumb trails, distance traveled, speed, heading visualization, a backend, a database, an API, GitHub repository writing, cloud storage, user accounts, location synchronization, address lookup, route planning, or vehicle tracking. These are potential future-version features only.

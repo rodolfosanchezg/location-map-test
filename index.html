@@ -5,15 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My Location Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="css/style.css?v=4">
+    <link rel="stylesheet" href="css/style.css?v=5">
     <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script defer src="js/app.js?v=6"></script>
+    <script defer src="js/app.js?v=7"></script>
   </head>
   <body>
     <main>
       <h1>My Location Map</h1>
       <p id="status" role="status" aria-live="polite">Requesting your location…</p>
       <p id="tracking-status-line">Tracking status: <span id="tracking-status">Waiting for location...</span></p>
+      <button id="save-location" type="button" disabled>Save Location</button>
+      <p id="save-message" role="status" aria-live="polite"></p>
       <div id="map" aria-label="Street map"></div>
       <section class="location-info" aria-label="Location information">
         <p>Latitude: <span id="latitude">—</span></p>
@@ -22,5 +24,23 @@
         <p>Location quality: <span id="location-quality">—</span></p>
       </section>
     </main>
+    <dialog id="save-location-dialog" aria-labelledby="save-location-title">
+      <form id="save-location-form">
+        <h2 id="save-location-title">Save Location</h2>
+        <label for="snapshot-latitude">Latitude</label>
+        <input id="snapshot-latitude" type="text" readonly>
+        <label for="snapshot-longitude">Longitude</label>
+        <input id="snapshot-longitude" type="text" readonly>
+        <label for="snapshot-accuracy">Accuracy</label>
+        <input id="snapshot-accuracy" type="text" readonly>
+        <label for="location-name">Location name</label>
+        <input id="location-name" type="text" required maxlength="80" autofocus>
+        <p id="save-error" role="alert"></p>
+        <div class="dialog-actions">
+          <button id="cancel-save" type="button">Cancel</button>
+          <button type="submit">Save</button>
+        </div>
+      </form>
+    </dialog>
   </body>
 </html>
