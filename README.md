@@ -2,27 +2,67 @@
 
 ## Project purpose
 
-This small web project tests browser geolocation on a Leaflet street map with OpenStreetMap tiles. It shows the coordinates, browser-reported accuracy, and a plain-language quality label. It uses plain HTML, CSS, and vanilla JavaScript, with no backend or database.
+My Location Map is a lightweight browser geolocation test application. It uses HTML5, plain CSS, vanilla JavaScript, Leaflet.js, OpenStreetMap tiles, and the Browser Geolocation API. It has no backend or database.
 
 ## Current version
 
-Version 0.2 is the current implementation. Version 0.1 is the approved, stable baseline.
+**Version 0.2 is the current approved and validated stable baseline.** Version 0.1 remains the approved baseline for the original one-time location behavior.
 
-## Version 0.1 features
+## Version 0.2 functionality
 
-- An 800 × 600 pixel map on desktop and a layout that fits mobile screens.
-- A default map before geolocation succeeds, then a marker and accuracy circle at the detected location.
-- An automatic, one-time location request that tries high accuracy first and falls back to standard accuracy if the first attempt is unavailable or times out.
-- Latitude, longitude, accuracy in meters, and location quality.
-- Status messages for permission denied, position unavailable, timeout, unsupported geolocation, and insecure HTTP contexts.
-- Local development with `npx http-server` and mobile geolocation testing through an HTTPS tunnel.
+- Loads a Leaflet street map with OpenStreetMap tiles. The map is 800 × 600 pixels on a wide desktop screen and fits smaller mobile screens.
+- Starts continuous tracking automatically when the page loads using `navigator.geolocation.watchPosition()`. There are no Start/Stop tracking buttons.
+- Tries a fresh high-accuracy watch first. If the initial fix is unavailable or times out, it clears that watch and starts one standard-accuracy watch.
+- Updates latitude, longitude, browser-reported accuracy, and location quality on every successful position update.
+- Moves the existing marker and updates the existing accuracy circle, including its radius. It does not create a new marker or circle for each update.
+- Centers on the first detected position and follows later positions until the user drags the map. Dragging pauses automatic centering while the marker, circle, and fields continue to update; reloading resumes following.
+- Shows a tracking status and handles common geolocation errors, unsupported geolocation, and insecure connections.
+- Uses responsive styling, an HTTPS OpenStreetMap tile URL, and map-size recalculation when the map container changes.
 
-## Version 0.2 features
+## Accuracy classification
 
-- Automatic continuous location tracking using `navigator.geolocation.watchPosition()` when the page loads, with no manual tracking controls.
-- A tracking-status field that reports when the page is waiting, tracking, or encountering an error.
-- Live updates to the existing marker, accuracy circle, coordinates, accuracy, and quality label. The map follows the latest location until you drag it.
-- The initial high-accuracy request and standard-accuracy fallback are retained for tracking. Only one watch is active at a time.
+| Browser-reported accuracy | Location quality |
+| --- | --- |
+| 0–50 m | Excellent |
+| 51–200 m | Good |
+| 201–1000 m | Approximate |
+| More than 1000 m | Low accuracy |
+
+The input is the numeric `position.coords.accuracy` value returned by the browser. The code compares the unrounded value against 50, 200, and 1000 meters, so fractional values just above a boundary enter the next category. The displayed accuracy is rounded to the nearest whole meter and shown as `±N m`. The accuracy circle uses the unrounded value. The application does not calculate or improve location accuracy.
+
+## Desktop versus mobile accuracy
+
+A desktop computer may report coarse positioning, including accuracy measured in hundreds or thousands of meters. Available sources may include nearby Wi-Fi networks, network/IP-based positioning, and operating-system location services. Mobile phones may provide significantly better accuracy because GPS/GNSS and other positioning sources may be available.
+
+`enableHighAccuracy: true` asks the browser for the best available positioning source. It does not guarantee GPS-level precision. Accuracy still depends on the device, environment, signal conditions, and settings.
+
+## Continuous tracking behavior
+
+Version 0.2 uses `navigator.geolocation.watchPosition()` and keeps one active watch ID internally. The browser and operating system determine when a new location update is produced; the application does not request positions at a fixed interval. Updates may slow or stop while the page is in the background.
+
+## HTTPS requirement
+
+Browser geolocation requires a secure context. `http://localhost:8000` can be used on the same computer for development. A LAN URL such as `http://192.168.x.x:8000` can display the page on a phone but is not sufficient for mobile geolocation. Open an HTTPS URL for iPhone testing. GitHub Pages provides HTTPS and allows testing outside the local network; Cloudflare Tunnel or another HTTPS endpoint can also be used for local testing.
+
+## Local development
+
+From the project directory, run:
+
+```bash
+npx http-server . -p 8000 -c-1
+```
+
+Open `http://localhost:8000` on the same computer and allow location access. The command serves the project on port 8000; `-c-1` disables caching during development. `npx` may fetch `http-server` on first use, but the project has no installed runtime dependencies.
+
+## GitHub Pages deployment
+
+Version 0.2 has been deployed and tested using GitHub Pages for HTTPS mobile testing. The general workflow is:
+
+```text
+Local development → Git commit → Git push to main → GitHub Pages deployment → HTTPS mobile testing
+```
+
+For branch-based publishing, configure GitHub Pages to serve the repository root on `main`, then push changes to that branch. Open the resulting HTTPS Pages address on the iPhone, allow location access, and test outdoors while moving with the page in the foreground. The site can be opened outside the local network. The repository includes `.nojekyll` for its static Pages site. See GitHub's [publishing source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site) and [HTTPS](https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https) documentation.
 
 ## Project structure
 
@@ -34,78 +74,53 @@ location-map-test/
 ├── js/
 │   └── app.js
 ├── .gitignore
+├── .nojekyll
 ├── README.md
 └── current_state.md
 ```
 
-## Requirements
+## Error handling
 
-- A modern browser with location services and permission to use them.
-- Internet access for the Leaflet CDN and OpenStreetMap tiles.
-- Node.js and `npx` to use the local server command below. No project dependencies need to be installed.
-- A secure context (`localhost` on the same device or HTTPS) for browser geolocation.
+The tracking-status field uses these states:
 
-## How to run locally
-
-From the project directory, run:
-
-```bash
-npx http-server . -p 8000 -c-1
-```
-
-Open `http://localhost:8000` on the computer. The browser will ask for location permission. `npx` may fetch `http-server` on first use; it does not add a dependency to this project. The `-c-1` option disables caching while testing changes.
-
-Tracking starts automatically when the page loads, preserving the initial location behavior from Version 0.1. There are no Start or Stop controls. The page keeps one active watcher and uses `clearWatch()` internally only when switching from the initial high-accuracy attempt to the fallback or when permission is denied.
-
-Dragging the map pauses automatic centering so a location update does not interrupt map browsing. The marker, circle, and location fields still update. Reload the page to resume automatic centering. The map uses OpenStreetMap's documented tile URL and recalculates its layout if the map area changes size.
-
-## How to test on another device
-
-Keep the local server running and open `http://<computer-LAN-IP>:8000` on a device on the same network to check the layout. `localhost` on a phone refers to the phone, not the computer. For a location test on an iPhone, use an HTTPS tunnel that forwards to local port 8000, then open the tunnel's HTTPS URL on the iPhone. Allow location access when asked. No particular tunnel service or command is required by this project.
-
-On desktop, check that tracking begins on load and the map, marker, accuracy circle, and fields update when a new position is reported. On iPhone, perform the same checks using the HTTPS URL and move with the page open to observe updates. `watchPosition()` has no fixed update interval: the browser and device decide when to report a meaningful change, and backgrounded pages may receive fewer updates or none.
-
-## HTTPS requirement for mobile geolocation
-
-Browser geolocation requires a secure context. A phone can display the map from a computer's plain HTTP LAN address, but geolocation will not work there even if location permission was granted. Use an HTTPS URL for mobile location testing. Cloudflare Tunnel or another HTTPS endpoint can forward to the local server for iPhone testing. Version 0.1 mobile HTTPS testing was validated through a tunnel.
-
-## Geolocation accuracy explanation
-
-The accuracy value comes directly from `position.coords.accuracy`. The page rounds it to the nearest whole meter for display, shows it as `±N m`, and uses the unrounded value for the accuracy circle and quality label. The app does not improve or estimate the browser's accuracy.
-
-Desktop geolocation can legitimately be coarse, including approximately 2 km, depending on available positioning sources. `enableHighAccuracy: true` asks the browser for better accuracy but does not guarantee GPS-level precision. Mobile devices with GPS/GNSS may provide much better accuracy. Accuracy and update behavior can vary with the environment, signal conditions, device settings, and power-saving behavior.
-
-## Accuracy-quality classification
-
-| Browser-reported accuracy | Location quality |
+| State | When shown |
 | --- | --- |
-| 0–50 m | Excellent |
-| Over 50–200 m | Good |
-| Over 200–1000 m | Approximate |
-| Over 1000 m | Low accuracy |
+| Waiting for location... | A watch has started or the initial high-accuracy attempt is falling back. |
+| Tracking active | A position update succeeded. |
+| Location permission denied | The browser or device denied location access. |
+| Location unavailable | The browser could not determine a position. |
+| Location request timed out | A position request exceeded its timeout. |
+| Geolocation unavailable | The browser does not provide the Geolocation API, or an unknown error occurred. |
+| Secure connection required | The page is not in a secure context. |
 
-The thresholds use the unrounded numeric accuracy, so a value just above a boundary can display as the boundary after rounding while receiving the next quality label.
-
-## Known limitations
-
-- The browser controls when location updates arrive; there is no fixed update rate.
-- Location access and precision depend on browser, device, operating system settings, network, and positioning signals. Mobile power-saving settings or a backgrounded page may limit updates.
-- The map tiles and Leaflet CDN require internet access.
-- OpenStreetMap's public tile service is best-effort; a slow or unavailable connection can leave tiles blank temporarily.
-- This project keeps only the latest location. It has no route history, saved positions, backend, or database.
+The separate status message provides more detail. The map remains visible if geolocation fails; before the first successful fix it shows the default location.
 
 ## Version history
 
 ### Version 0.1 — approved baseline
 
-- Initial map and one-time geolocation with high-accuracy attempt and fallback.
-- Marker, accuracy circle, coordinates, browser accuracy, and accuracy-quality classification.
-- Responsive mobile support and error handling.
-- HTTPS mobile testing validated through a tunnel.
+- Initial Leaflet/OpenStreetMap street map and one-time browser geolocation.
+- Marker, accuracy circle, latitude, longitude, accuracy display, and accuracy-quality classification.
+- Responsive desktop/mobile layout and geolocation error handling.
+- HTTPS mobile testing validated.
 
-### Version 0.2 — current implementation
+### Version 0.2 — approved stable baseline
 
-- Automatic continuous geolocation using `watchPosition()` when the page loads.
-- Live updates that reuse the marker and accuracy circle and refresh the coordinates, accuracy, and quality label.
-- Removed manual Start/Stop Tracking controls to simplify the application; a tracking-status field remains.
-- Dragging pauses automatic centering, and the map refreshes when its container size changes.
+- Replaced one-time positioning with automatic continuous tracking using `watchPosition()`.
+- Tracking starts on page load, with no Start/Stop controls.
+- The existing marker and accuracy circle update continuously; coordinates, accuracy, and quality update with each successful position.
+- GitHub Pages deployment added for HTTPS mobile testing, and an outdoor/mobile testing workflow established.
+- Version 0.2 approved and validated as the stable baseline.
+
+## Known limitations
+
+- Accuracy depends on the device, available positioning sources, and environment.
+- The browser controls update frequency; the application does not set a fixed interval.
+- Continuous high-accuracy geolocation may use additional battery power.
+- Mobile browsers and operating systems may limit background tracking.
+- OpenStreetMap tiles and the Leaflet CDN require internet access; public tile availability is best-effort.
+- No route history is stored. There is no backend or database, and no location data is persisted.
+
+## Out-of-scope features
+
+Version 0.2 does not include route history, breadcrumb trails, distance traveled, speed, heading visualization, saved positions, a backend, a database, user accounts, address lookup, route planning, or vehicle tracking. These are potential future-version features only.
