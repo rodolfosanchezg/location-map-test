@@ -6,7 +6,7 @@ My Location Map is a lightweight browser geolocation test application. It uses H
 
 ## Current version
 
-**Version 0.3 is the current implementation.** Version 0.2 remains the approved and validated stable baseline; Version 0.1 remains the approved baseline for the original one-time location behavior.
+**Version 0.3 — approved and validated stable baseline.** Version 0.2 remains the approved continuous-tracking baseline; Version 0.1 remains the original approved baseline for one-time location behavior.
 
 ## Version 0.2 functionality
 
@@ -30,6 +30,8 @@ My Location Map is a lightweight browser geolocation test application. It uses H
 Saved locations use the `locationMap.savedLocations` key as a JSON array. Each record has `name`, numeric `latitude`, numeric `longitude`, numeric `accuracy`, and an ISO 8601 `timestamp`, ready for a possible future CSV export. The stored accuracy is the unrounded browser value; only the dialog display rounds it to the nearest meter.
 
 Saved locations remain only in that browser and device, for that site's origin. They are not uploaded to GitHub, written to `README.md` or a project CSV file, synchronized between devices, or stored on a server. Clearing the browser's site data may remove them. Malformed saved JSON is handled as an empty array when saving a new location. Version 0.3 does not export CSV.
+
+Version 0.3 passed desktop browser and iPhone HTTPS testing through the deployed GitHub Pages site. Testing confirmed continuous geolocation, Save Location, frozen snapshots while tracking continues, named records in `localStorage`, and the Saved locations counter, including persistence after reloading the page.
 
 ## Accuracy classification
 
@@ -68,7 +70,7 @@ Open `http://localhost:8000` on the same computer and allow location access. The
 
 ## GitHub Pages deployment
 
-Version 0.2 has been deployed and tested using GitHub Pages for HTTPS mobile testing. Version 0.3 remains a static site compatible with the same deployment approach. The general workflow is:
+Version 0.2 and Version 0.3 have been deployed and tested using GitHub Pages for HTTPS mobile testing. Version 0.3's deployed site passed iPhone testing. The general workflow is:
 
 ```text
 Local development → Git commit → Git push to main → GitHub Pages deployment → HTTPS mobile testing
@@ -124,13 +126,14 @@ The separate status message provides more detail. The map remains visible if geo
 - GitHub Pages deployment added for HTTPS mobile testing, and an outdoor/mobile testing workflow established.
 - Version 0.2 approved and validated as the stable baseline.
 
-### Version 0.3 — current implementation
+### Version 0.3 — approved and validated stable baseline
 
 - Added Save Location and a naming dialog.
-- Captures a frozen GPS snapshot when the button is pressed, while live tracking continues.
-- Stores named locations as browser-local records containing name, latitude, longitude, accuracy, and timestamp.
-- Shows a saved-location count derived from browser storage on load and after each successful save.
-- Uses an array structure suitable for a future CSV export; CSV export is not implemented.
+- Pressing Save Location captures a frozen latitude, longitude, accuracy, and timestamp; live tracking continues while the dialog is open.
+- Stores named records in browser `localStorage` under `locationMap.savedLocations`. Each record contains `name`, `latitude`, `longitude`, `accuracy`, and `timestamp`.
+- Added the Saved locations counter. It initializes from `localStorage` on page load and updates after every successful save; persistence after reload was validated.
+- Desktop browser and iPhone HTTPS testing passed. The GitHub Pages deployment was validated.
+- Version 0.3 is approved as the current stable baseline.
 
 ## Known limitations
 
@@ -140,6 +143,7 @@ The separate status message provides more detail. The map remains visible if geo
 - Mobile browsers and operating systems may limit background tracking.
 - OpenStreetMap tiles and the Leaflet CDN require internet access; public tile availability is best-effort.
 - No route history is stored. There is no backend or database. Saved locations persist only in the current browser's site storage and may be removed if that site data is cleared.
+- There is no CSV export or saved-location list yet.
 
 ## Out-of-scope features
 
