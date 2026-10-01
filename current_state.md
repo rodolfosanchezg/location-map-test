@@ -8,6 +8,8 @@ Version 0.2 is the approved and validated stable baseline. It replaces the one-t
 
 Version 0.3 is the approved and validated current stable baseline. It retains the responsive Leaflet/OpenStreetMap map, automatic continuous tracking, live marker and accuracy-circle updates, coordinates, browser accuracy, quality classification, and HTTPS mobile compatibility. After a valid position is received, Save Location captures a frozen latitude, longitude, accuracy, and timestamp. A native naming dialog saves the snapshot to the `locationMap.savedLocations` array in this browser's `localStorage`. A visible Saved locations counter reads that array on page load and updates after each successful save. Live tracking continues while the dialog is open. Version 0.3 has been deployed and tested through GitHub Pages. No saved-location list, CSV export, backend, or database is included.
 
+Version 0.4 is the current implementation on that approved baseline. Export CSV downloads every saved record as a date-named CSV generated entirely in the browser from `locationMap.savedLocations`. Once the download is initiated, the app writes `[]` to that key, resets the Saved locations counter to zero, and disables Export CSV until a new location is saved. Each downloaded file archives one batch. Malformed or empty stored data disables export; failed CSV preparation or download initiation leaves saved records untouched. No saved-location list, CSV import, backend, or database is included.
+
 ## Testing and access
 
 Run `npx http-server . -p 8000 -c-1` from the project directory for local development. `http://localhost:8000` supports desktop geolocation on the same computer. A phone can view the layout over the computer's HTTP LAN address, but phone geolocation needs an HTTPS URL. Versions 0.2 and 0.3 have been deployed and tested through GitHub Pages, which provides an HTTPS address for iPhone testing outside the local network. A tunnel to local port 8000 is another option.
@@ -17,5 +19,7 @@ The browser reports the accuracy value; the application cannot make it more prec
 Version 0.2 was checked with JavaScript syntax validation, simulated watch callbacks for automatic startup, fallback, errors, marker and circle reuse, and accuracy ranges. A narrow browser render confirmed the map still fits the screen. GitHub Pages HTTPS mobile testing is recorded as validated for this approved baseline.
 
 Version 0.3 was checked with simulated GPS updates and browser storage for snapshot freezing, name validation, multiple saves, persistence after reload, malformed stored JSON, Cancel, and the existing tracking fallback. A phone-width browser render confirmed the dialog fits. Desktop browser testing and iPhone HTTPS testing passed on the deployed GitHub Pages site, including continuous geolocation, Save Location, frozen snapshots, localStorage persistence, and the Saved locations counter after reload. Version 0.3 is approved and validated as the current stable baseline.
+
+Version 0.4 adds an export-and-clear cycle on top of Version 0.3. Browser and iPhone deployment testing of Version 0.4 has not yet been recorded.
 
 See `README.md` for features, testing steps, accuracy thresholds, known limitations, and version history.

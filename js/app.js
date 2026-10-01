@@ -106,8 +106,26 @@ function getSavedLocations() {
   }
 }
 
+function isSavedLocationRecord(location) {
+  return location !== null && typeof location === "object" &&
+    typeof location.name === "string" && location.name.trim() !== "" &&
+    Number.isFinite(location.latitude) &&
+    Number.isFinite(location.longitude) &&
+    Number.isFinite(location.accuracy) && location.accuracy >= 0 &&
+    typeof location.timestamp === "string" &&
+    !Number.isNaN(Date.parse(location.timestamp)) &&
+    new Date(location.timestamp).toISOString() === location.timestamp;
+}
+
+function updateExportButtonState(locations = getSavedLocations()) {
+  document.getElementById("export-csv").disabled =
+    locations.length === 0 || !locations.every(isSavedLocationRecord);
+}
+
 function updateSavedLocationsCount() {
-  document.getElementById("saved-locations-count").textContent = String(getSavedLocations().length);
+  const locations = getSavedLocations();
+  document.getElementById("saved-locations-count").textContent = String(locations.length);
+  updateExportButtonState(locations);
 }
 
 function setSavedLocations(locations) {
@@ -142,6 +160,68 @@ function saveLocationSnapshot(event) {
   updateSavedLocationsCount();
   closeSaveLocationDialog();
   document.getElementById("save-message").textContent = "Location saved";
+}
+
+function escapeCsvValue(value) {
+  const text = String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function buildCsv(locations) {
+  const columns = ["name", "latitude", "longitude", "accuracy", "timestamp"];
+  const rows = locations.map(location =>
+    columns.map(column => escapeCsvValue(location[column])).join(",")
+  );
+  return [columns.join(","), ...rows].join("\r\n") + "\r\n";
+}
+
+function downloadCsv(csvText, filename) {
+  const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  let initiated = false;
+
+  try {
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    initiated = true;
+  } finally {
+    link.remove();
+    if (initiated) {
+      window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+    } else {
+      URL.revokeObjectURL(url);
+    }
+  }
+}
+
+function exportSavedLocationsToCsv() {
+  const locations = getSavedLocations();
+  if (locations.length === 0 || !locations.every(isSavedLocationRecord)) {
+    updateExportButtonState(locations);
+    return;
+  }
+
+  try {
+    const csvText = buildCsv(locations);
+    const filename = `saved-locations-${new Date().toISOString().slice(0, 10)}.csv`;
+    downloadCsv(csvText, filename);
+  } catch {
+    document.getElementById("save-message").textContent = "Could not export saved locations.";
+    return;
+  }
+
+  if (!setSavedLocations([])) {
+    document.getElementById("save-message").textContent =
+      "CSV download started, but saved locations could not be cleared.";
+    return;
+  }
+
+  updateSavedLocationsCount();
+  document.getElementById("save-message").textContent =
+    `CSV exported: ${locations.length} locations. Saved locations cleared.`;
 }
 
 function handleGeolocationError(error) {
@@ -210,6 +290,7 @@ function startLocationTracking() {
 }
 
 document.getElementById("save-location").addEventListener("click", openSaveLocationDialog);
+document.getElementById("export-csv").addEventListener("click", exportSavedLocationsToCsv);
 document.getElementById("cancel-save").addEventListener("click", closeSaveLocationDialog);
 document.getElementById("save-location-form").addEventListener("submit", saveLocationSnapshot);
 saveDialog.addEventListener("cancel", resetSaveLocationDialog);

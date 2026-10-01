@@ -29,7 +29,8 @@ h1 {
   margin: 0 0 12px;
 }
 
-#save-location {
+#save-location,
+#export-csv {
   margin-bottom: 12px;
 }
 
@@ -82,6 +83,7 @@ h1 {
 }
 
 #save-location,
+#export-csv,
 .dialog-actions button {
   padding: 6px 10px;
   font: inherit;
