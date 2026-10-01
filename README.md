@@ -6,7 +6,7 @@ My Location Map is a lightweight browser geolocation test application. It uses H
 
 ## Current version
 
-**Version 0.5 — approved and validated stable baseline.** Version 0.4 remains the approved CSV export baseline; Version 0.3 remains the approved named-location and `localStorage` baseline; Version 0.2 remains the approved continuous-tracking baseline; Version 0.1 remains the original approved baseline for one-time location behavior.
+**Version 0.6 — approved and validated stable baseline.** Version 0.5 remains the approved CSV marker-loading baseline; Version 0.4 remains the approved CSV export baseline; Version 0.3 remains the approved named-location and `localStorage` baseline; Version 0.2 remains the approved continuous-tracking baseline; Version 0.1 remains the original approved baseline for one-time location behavior.
 
 ## Version 0.2 functionality
 
@@ -55,6 +55,18 @@ The root `locations.csv` currently contains saved location records. To display a
 
 Version 0.5 passed laptop/browser and iPhone HTTPS testing through the deployed GitHub Pages site. Testing confirmed automatic CSV loading, permanently labeled markers, the CSV locations counter, automatic map fitting, Clear Map removing only CSV markers, restoration after refresh, and continued live GPS tracking.
 
+## Version 0.6 functionality
+
+- Tapping a CSV marker requests one walking route from the latest valid live GPS position to that marker. If GPS has not provided a valid position, the page shows “Current location is not available yet” and makes no route request.
+- Routing uses the openrouteservice Directions API at `https://api.heigit.org/openrouteservice/v2/directions/foot-walking/geojson`. It sends a JSON POST with `[longitude, latitude]` coordinates and an `Authorization` header. The profile is `foot-walking` only.
+- A separate Leaflet route layer displays the returned GeoJSON. The map fits the route once, and the page shows the destination, walking distance, and approximate walking time returned by the API. CSV markers, the live GPS marker, and the accuracy circle remain separate.
+- Only one route is shown at a time. Tapping another CSV marker replaces it; a repeated tap while the same request is pending is ignored. **Clear Route** removes the route and its information. **Clear Map** still removes CSV markers and also clears an active or pending route.
+- Live GPS fields, marker, and accuracy circle keep updating while a route remains static. To calculate from a newer GPS position, tap a CSV marker again. Routing errors leave the rest of the map and saving/export features working.
+
+The openrouteservice testing API key is stored locally in `js/config.js`. That file is listed in `.gitignore` and must not be committed or pushed to GitHub. The key is still visible to anyone who can access the locally served site because the browser loads this file; Git ignore does not protect a key served to a browser. Routing has been validated through a local HTTPS Cloudflare Tunnel and is not deployed publicly with the key. Public GitHub Pages deployment of routing is deferred until a safe API-key protection method is selected. The app currently has no backend, protected proxy, or secret manager. See the [openrouteservice Directions documentation](https://giscience.github.io/openrouteservice/api-reference/endpoints/directions/requests-and-return-types) for the POST GeoJSON response format.
+
+Version 0.6 passed laptop/browser and iPhone/mobile testing through a local HTTPS Cloudflare Tunnel. Testing confirmed CSV markers, walking route calculation to the selected destination, route drawing, destination name, walking distance, approximate walking time, route replacement when another marker is selected, Clear Route, and continued live GPS updates while a route remains static. Version 0.6 is approved and validated as the stable baseline.
+
 ## Accuracy classification
 
 | Browser-reported accuracy | Location quality |
@@ -74,7 +86,7 @@ A desktop computer may report coarse positioning, including accuracy measured in
 
 ## Continuous tracking behavior
 
-Versions 0.2 through 0.5 use `navigator.geolocation.watchPosition()` and keep one active watch ID internally. The browser and operating system determine when a new location update is produced; the application does not request positions at a fixed interval. Tracking continues while the Save Location dialog is open. Updates may slow or stop while the page is in the background.
+Versions 0.2 through 0.6 use `navigator.geolocation.watchPosition()` and keep one active watch ID internally. The browser and operating system determine when a new location update is produced; the application does not request positions at a fixed interval. Tracking continues while the Save Location dialog is open. Updates may slow or stop while the page is in the background.
 
 ## HTTPS requirement
 
@@ -90,15 +102,17 @@ npx http-server . -p 8000 -c-1
 
 Open `http://localhost:8000` on the same computer and allow location access. The command serves the project on port 8000; `-c-1` disables caching during development. `npx` may fetch `http-server` on first use, but the project has no installed runtime dependencies.
 
+For local HTTPS mobile routing tests, run `cloudflared tunnel --url http://localhost:8000` while the local server is running. Keep the tunnel URL limited to testing because the browser serves `js/config.js` to anyone with access to that URL.
+
 ## GitHub Pages deployment
 
-Versions 0.2 through 0.5 have been deployed and tested using GitHub Pages for HTTPS mobile testing. Version 0.5 passed iPhone HTTPS testing on the deployed site. The general workflow is:
+Versions 0.2 through 0.5 were deployed and tested using GitHub Pages for HTTPS mobile testing. Version 0.5 passed iPhone HTTPS testing on the deployed site. GitHub Pages may still host the non-routing project files, but Version 0.6 routing has only been validated through a local HTTPS tunnel. Do not publish `js/config.js` or the routing API key to GitHub Pages. The earlier deployment workflow was:
 
 ```text
 Local development → Git commit → Git push to main → GitHub Pages deployment → HTTPS mobile testing
 ```
 
-For branch-based publishing, configure GitHub Pages to serve the repository root on `main`, then push changes to that branch. Open the resulting HTTPS Pages address on the iPhone, allow location access, and test outdoors while moving with the page in the foreground. The site can be opened outside the local network. The repository includes `.nojekyll` for its static Pages site. See GitHub's [publishing source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site) and [HTTPS](https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https) documentation.
+For branch-based publishing of non-routing files, GitHub Pages can serve the repository root on `main`. With `js/config.js` excluded, routing is unavailable there. The repository includes `.nojekyll` for its static Pages site. See GitHub's [publishing source](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site) and [HTTPS](https://docs.github.com/en/pages/getting-started-with-github-pages/securing-your-github-pages-site-with-https) documentation.
 
 ## Project structure
 
@@ -109,7 +123,8 @@ location-map-test/
 ├── css/
 │   └── style.css
 ├── js/
-│   └── app.js
+│   ├── app.js
+│   └── config.js  (local, ignored by Git)
 ├── .gitignore
 ├── .nojekyll
 ├── README.md
@@ -173,7 +188,15 @@ The separate status message provides more detail. The map remains visible if geo
 - Creates one permanently labeled marker per valid CSV location and fits the map to all imported markers once.
 - Added the CSV locations counter and Clear Map; clearing removes only imported CSV markers and labels.
 - Refresh restores markers from the unchanged CSV file, while live GPS tracking continues.
-- Laptop/browser, iPhone HTTPS, and GitHub Pages deployment testing passed. Version 0.5 is approved and validated as the current stable baseline.
+- Laptop/browser, iPhone HTTPS, and GitHub Pages deployment testing passed. Version 0.5 is approved and validated as the stable baseline for Version 0.6.
+
+### Version 0.6 — approved and validated stable baseline
+
+- Retained all Version 0.5 functionality and added walking route calculation from the latest live GPS position to a tapped CSV marker using the openrouteservice Directions API at `api.heigit.org` with the `foot-walking` profile.
+- Added a route polyline, destination name, walking distance, estimated walking time, and Clear Route. Only one route is active; selecting another marker replaces it.
+- Live GPS continues updating while the route remains static. There is no automatic rerouting or turn-by-turn navigation.
+- Laptop/browser, iPhone/mobile, and local HTTPS Cloudflare Tunnel testing passed. CSV markers, route calculation and drawing, destination selection, distance, walking time, route replacement, Clear Route, and continued live GPS updates were validated.
+- The testing API key remains local in ignored `js/config.js`. Public deployment of the routing key is intentionally deferred. Version 0.6 is approved and validated as the stable baseline.
 
 ## Known limitations
 
@@ -185,7 +208,8 @@ The separate status message provides more detail. The map remains visible if geo
 - No route history is stored. There is no backend, database, or cloud synchronization. Before export, saved locations persist only in the current browser's site storage and may be removed if that site data is cleared.
 - There is no CSV upload from the device, saved-location list, or edit/delete functionality. The browser initiates downloads but cannot confirm that the user retained the downloaded file.
 - Version 0.5 depends on `locations.csv` being available from the site. It reads only that root file and never writes changes back to it. There is no CSV upload selector, import from phone storage, support for multiple CSV files, filters, search, marker categories/colors, or editing/deleting individual CSV markers.
+- Version 0.6 routing needs the local testing API key, network access, and an available openrouteservice walking route. API errors or quota limits can prevent a route from appearing. The key is exposed to users of the local test site, so routing is not publicly deployed with it; no protected API proxy exists yet.
 
 ## Out-of-scope features
 
-Version 0.5 does not include a CSV upload selector or device-file import, multiple CSV files, a saved-location list, editing or deleting saved locations, marker categories, route history, breadcrumb trails, distance traveled, speed, heading visualization, a backend, a database, an API, GitHub repository writing, cloud storage, user accounts, location synchronization, address lookup, route planning, or vehicle tracking. These are potential future-version features only.
+Version 0.6 does not include a CSV upload selector or device-file import, multiple CSV files, a saved-location list, editing or deleting saved locations, marker categories, route history, automatic rerouting, turn-by-turn directions, route saving, distance traveled, speed, heading visualization, a backend, a database, an API proxy, GitHub repository writing, cloud storage, user accounts, location synchronization, address lookup, or route optimization. These are potential future-version features only.

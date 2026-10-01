@@ -29,6 +29,10 @@ let accuracyCircle = null;
 let followLocation = true;
 let latestPosition = null;
 let pendingSnapshot = null;
+let activeRouteLayer = null;
+let pendingRouteController = null;
+let pendingRouteDestination = null;
+let routeRequestId = 0;
 
 map.on("dragstart", () => {
   followLocation = false;
@@ -289,6 +293,7 @@ function addCsvMarker(location) {
   label.textContent = location.name;
   L.marker([location.latitude, location.longitude])
     .bindTooltip(label, { permanent: true })
+    .on("click", () => requestWalkingRoute(location))
     .addTo(csvMarkersLayer);
 }
 
@@ -324,8 +329,137 @@ async function loadCsvLocations() {
 }
 
 function clearCsvMarkers() {
+  clearRoute();
   csvMarkersLayer.clearLayers();
   updateCsvLocationsCount();
+}
+
+function buildRouteRequest(origin, destination) {
+  return { coordinates: [
+    [origin.longitude, origin.latitude],
+    [destination.longitude, destination.latitude]
+  ] };
+}
+
+function formatRouteDistance(distanceMeters) {
+  return distanceMeters < 1000
+    ? `${Math.round(distanceMeters)} m`
+    : `${(distanceMeters / 1000).toFixed(1)} km`;
+}
+
+function formatRouteDuration(durationSeconds) {
+  const minutes = Math.max(1, Math.round(durationSeconds / 60));
+  const hours = Math.floor(minutes / 60);
+  return hours === 0 ? `${minutes} min` : `${hours} h ${minutes % 60} min`;
+}
+
+function displayRouteInfo(name, distance, duration) {
+  document.getElementById("route-status").textContent = "";
+  document.getElementById("route-destination").textContent = name;
+  document.getElementById("route-distance").textContent = formatRouteDistance(distance);
+  document.getElementById("route-duration").textContent = formatRouteDuration(duration);
+  document.getElementById("route-details").hidden = false;
+  document.getElementById("clear-route").disabled = false;
+}
+
+function clearRoute() {
+  routeRequestId++;
+  if (pendingRouteController) pendingRouteController.abort();
+  pendingRouteController = null;
+  pendingRouteDestination = null;
+  if (activeRouteLayer) map.removeLayer(activeRouteLayer);
+  activeRouteLayer = null;
+  document.getElementById("route-status").textContent =
+    "Tap a location marker to calculate a walking route.";
+  document.getElementById("route-destination").textContent = "";
+  document.getElementById("route-distance").textContent = "";
+  document.getElementById("route-duration").textContent = "";
+  document.getElementById("route-details").hidden = true;
+  document.getElementById("clear-route").disabled = true;
+}
+
+function handleRoutingError() {
+  document.getElementById("route-status").textContent =
+    "Walking route could not be calculated.";
+  document.getElementById("clear-route").disabled = true;
+}
+
+function displayRoute(routeGeoJson, name) {
+  const feature = routeGeoJson?.features?.[0];
+  const coordinates = feature?.geometry?.coordinates;
+  const summary = feature?.properties?.summary;
+  if (routeGeoJson?.type !== "FeatureCollection" ||
+      !Array.isArray(routeGeoJson.features) || routeGeoJson.features.length === 0 ||
+      feature?.type !== "Feature" ||
+      feature?.geometry?.type !== "LineString" ||
+      !Array.isArray(coordinates) || coordinates.length < 2 ||
+      !coordinates.every(point => Array.isArray(point) && point.length >= 2 &&
+        Number.isFinite(point[0]) && point[0] >= -180 && point[0] <= 180 &&
+        Number.isFinite(point[1]) && point[1] >= -90 && point[1] <= 90) ||
+      !Number.isFinite(summary?.distance) || summary.distance < 0 ||
+      !Number.isFinite(summary?.duration) || summary.duration < 0) {
+    throw new Error("Invalid walking route response");
+  }
+
+  const routeLayer = L.geoJSON(feature).addTo(map);
+  activeRouteLayer = routeLayer;
+  followLocation = false;
+  map.fitBounds(routeLayer.getBounds(), { padding: [30, 30] });
+  displayRouteInfo(name, summary.distance, summary.duration);
+}
+
+async function requestWalkingRoute(destination) {
+  if (pendingRouteController && pendingRouteDestination === destination) return;
+  clearRoute();
+
+  if (!latestPosition) {
+    document.getElementById("route-status").textContent =
+      "Current location is not available yet.";
+    return;
+  }
+
+  if (typeof ORS_API_KEY !== "string" || !ORS_API_KEY.trim() ||
+      ORS_API_KEY.trim() === "PASTE_API_KEY_HERE") {
+    document.getElementById("route-status").textContent =
+      "Add an openrouteservice API key in js/config.js to calculate routes.";
+    return;
+  }
+
+  const requestId = routeRequestId;
+  const controller = new AbortController();
+  pendingRouteController = controller;
+  pendingRouteDestination = destination;
+  document.getElementById("route-status").textContent = "Calculating walking route...";
+  document.getElementById("clear-route").disabled = false;
+
+  try {
+    const response = await fetch(
+      "https://api.heigit.org/openrouteservice/v2/directions/foot-walking/geojson",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: ORS_API_KEY.trim()
+        },
+        body: JSON.stringify(buildRouteRequest(latestPosition, destination)),
+        signal: controller.signal
+      }
+    );
+    if (!response.ok) throw new Error(`Routing service returned ${response.status}`);
+    const routeGeoJson = await response.json();
+    if (requestId !== routeRequestId) return;
+    displayRoute(routeGeoJson, destination.name);
+  } catch (error) {
+    if (requestId === routeRequestId && error.name !== "AbortError") {
+      console.warn("Walking route error:", error);
+      handleRoutingError();
+    }
+  } finally {
+    if (requestId === routeRequestId) {
+      pendingRouteController = null;
+      pendingRouteDestination = null;
+    }
+  }
 }
 
 function handleGeolocationError(error) {
@@ -396,6 +530,7 @@ function startLocationTracking() {
 document.getElementById("save-location").addEventListener("click", openSaveLocationDialog);
 document.getElementById("export-csv").addEventListener("click", exportSavedLocationsToCsv);
 document.getElementById("clear-map").addEventListener("click", clearCsvMarkers);
+document.getElementById("clear-route").addEventListener("click", clearRoute);
 document.getElementById("cancel-save").addEventListener("click", closeSaveLocationDialog);
 document.getElementById("save-location-form").addEventListener("submit", saveLocationSnapshot);
 saveDialog.addEventListener("cancel", resetSaveLocationDialog);

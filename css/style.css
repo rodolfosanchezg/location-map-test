@@ -90,9 +90,18 @@ h1 {
 #save-location,
 #export-csv,
 #clear-map,
+#clear-route,
 .dialog-actions button {
   padding: 6px 10px;
   font: inherit;
+}
+
+#route-info {
+  margin-top: 12px;
+}
+
+#route-info p {
+  margin: 0 0 8px;
 }
 
 #map {

@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My Location Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="css/style.css?v=8">
+    <link rel="stylesheet" href="css/style.css?v=9">
     <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script defer src="js/app.js?v=11"></script>
+    <script defer src="js/config.js?v=1"></script>
+    <script defer src="js/app.js?v=12"></script>
   </head>
   <body>
     <main>
@@ -21,6 +22,15 @@
       <button id="clear-map" type="button" disabled>Clear Map</button>
       <p id="save-message" role="status" aria-live="polite"></p>
       <div id="map" aria-label="Street map"></div>
+      <section id="route-info" aria-label="Walking route information">
+        <p id="route-status" role="status" aria-live="polite">Tap a location marker to calculate a walking route.</p>
+        <div id="route-details" hidden>
+          <p>Destination: <span id="route-destination"></span></p>
+          <p>Distance: <span id="route-distance"></span></p>
+          <p>Estimated walking time: <span id="route-duration"></span></p>
+        </div>
+        <button id="clear-route" type="button" disabled>Clear Route</button>
+      </section>
       <section class="location-info" aria-label="Location information">
         <p>Latitude: <span id="latitude">—</span></p>
         <p>Longitude: <span id="longitude">—</span></p>
