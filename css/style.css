@@ -30,11 +30,16 @@ h1 {
 }
 
 #save-location,
-#export-csv {
+#export-csv,
+#clear-map {
   margin-bottom: 12px;
 }
 
 #saved-locations-line {
+  margin: 0 0 12px;
+}
+
+#csv-locations-line {
   margin: 0 0 12px;
 }
 
@@ -84,6 +89,7 @@ h1 {
 
 #save-location,
 #export-csv,
+#clear-map,
 .dialog-actions button {
   padding: 6px 10px;
   font: inherit;

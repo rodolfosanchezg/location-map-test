@@ -17,6 +17,7 @@ function getAccuracyQuality(accuracy) {
 }
 
 const map = initializeMap();
+const csvMarkersLayer = L.featureGroup().addTo(map);
 const savedLocationsKey = "locationMap.savedLocations";
 const saveDialog = document.getElementById("save-location-dialog");
 const locationNameInput = document.getElementById("location-name");
@@ -231,6 +232,102 @@ function exportSavedLocationsToCsv() {
     `CSV exported: ${locations.length} locations. Saved locations cleared.`;
 }
 
+function parseCsv(csvText) {
+  const rows = [];
+  let row = [];
+  let field = "";
+  let inQuotes = false;
+  const text = csvText.replace(/^\uFEFF/, "");
+
+  for (let i = 0; i < text.length; i++) {
+    const character = text[i];
+    if (inQuotes) {
+      if (character === '"' && text[i + 1] === '"') {
+        field += '"';
+        i++;
+      } else if (character === '"') {
+        inQuotes = false;
+      } else {
+        field += character;
+      }
+    } else if (character === '"' && field === "") {
+      inQuotes = true;
+    } else if (character === ",") {
+      row.push(field);
+      field = "";
+    } else if (character === "\r" || character === "\n") {
+      if (character === "\r" && text[i + 1] === "\n") i++;
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else {
+      field += character;
+    }
+  }
+
+  if (!inQuotes && (row.length > 0 || field !== "")) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
+
+function validateCsvLocation(row) {
+  if (row.length !== 5 || !row[0].trim() || !row[1].trim() || !row[2].trim()) return null;
+  const decimal = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
+  if (!decimal.test(row[1].trim()) || !decimal.test(row[2].trim())) return null;
+  const latitude = Number(row[1]);
+  const longitude = Number(row[2]);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
+      latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+  return { name: row[0], latitude, longitude };
+}
+
+function addCsvMarker(location) {
+  const label = document.createElement("span");
+  label.textContent = location.name;
+  L.marker([location.latitude, location.longitude])
+    .bindTooltip(label, { permanent: true })
+    .addTo(csvMarkersLayer);
+}
+
+function updateCsvLocationsCount() {
+  const count = csvMarkersLayer.getLayers().length;
+  document.getElementById("csv-locations-count").textContent = String(count);
+  document.getElementById("clear-map").disabled = count === 0;
+}
+
+function fitMapToCsvLocations() {
+  if (csvMarkersLayer.getLayers().length === 0) return;
+  followLocation = false;
+  map.fitBounds(csvMarkersLayer.getBounds(), { padding: [30, 30], maxZoom: 16 });
+}
+
+async function loadCsvLocations() {
+  try {
+    const response = await fetch("locations.csv");
+    if (!response.ok) return;
+    const rows = parseCsv(await response.text());
+    if (rows.length === 0 || rows[0].join(",") !== "name,latitude,longitude,accuracy,timestamp") return;
+
+    for (const row of rows.slice(1)) {
+      if (row.every(value => value.trim() === "")) continue;
+      const location = validateCsvLocation(row);
+      if (location) addCsvMarker(location);
+    }
+    updateCsvLocationsCount();
+    fitMapToCsvLocations();
+  } catch (error) {
+    console.warn("Could not load locations.csv:", error);
+  }
+}
+
+function clearCsvMarkers() {
+  csvMarkersLayer.clearLayers();
+  updateCsvLocationsCount();
+}
+
 function handleGeolocationError(error) {
   if (!receivedPosition && !usingStandardAccuracy && (error.code === 2 || error.code === 3)) {
     navigator.geolocation.clearWatch(watchId);
@@ -298,9 +395,12 @@ function startLocationTracking() {
 
 document.getElementById("save-location").addEventListener("click", openSaveLocationDialog);
 document.getElementById("export-csv").addEventListener("click", exportSavedLocationsToCsv);
+document.getElementById("clear-map").addEventListener("click", clearCsvMarkers);
 document.getElementById("cancel-save").addEventListener("click", closeSaveLocationDialog);
 document.getElementById("save-location-form").addEventListener("submit", saveLocationSnapshot);
 saveDialog.addEventListener("cancel", resetSaveLocationDialog);
 
 updateSavedLocationsCount();
+updateCsvLocationsCount();
 startLocationTracking();
+loadCsvLocations();

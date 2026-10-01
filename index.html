@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My Location Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-    <link rel="stylesheet" href="css/style.css?v=7">
+    <link rel="stylesheet" href="css/style.css?v=8">
     <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script defer src="js/app.js?v=10"></script>
+    <script defer src="js/app.js?v=11"></script>
   </head>
   <body>
     <main>
@@ -17,6 +17,8 @@
       <button id="save-location" type="button" disabled>Save Location</button>
       <p id="saved-locations-line">Saved locations: <span id="saved-locations-count">0</span></p>
       <button id="export-csv" type="button" disabled>Export CSV</button>
+      <p id="csv-locations-line">CSV locations: <span id="csv-locations-count">0</span></p>
+      <button id="clear-map" type="button" disabled>Clear Map</button>
       <p id="save-message" role="status" aria-live="polite"></p>
       <div id="map" aria-label="Street map"></div>
       <section class="location-info" aria-label="Location information">
