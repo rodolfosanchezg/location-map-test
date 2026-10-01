@@ -6,7 +6,7 @@ My Location Map is a lightweight browser geolocation test application. It uses H
 
 ## Current version
 
-**Version 0.4 is the current implementation.** Version 0.3 remains the approved and validated stable baseline; Version 0.2 remains the approved continuous-tracking baseline; Version 0.1 remains the original approved baseline for one-time location behavior.
+**Version 0.4 — approved and validated stable baseline.** Version 0.3 remains the approved named-location and `localStorage` baseline; Version 0.2 remains the approved continuous-tracking baseline; Version 0.1 remains the original approved baseline for one-time location behavior.
 
 ## Version 0.2 functionality
 
@@ -27,18 +27,21 @@ My Location Map is a lightweight browser geolocation test application. It uses H
 - Save appends a named record to the browser's `localStorage`, closes the dialog, and shows “Location saved”. No saved-location list or marker is added to the map.
 - The **Saved locations** counter shows how many named records exist in this browser's `localStorage`. It is calculated when the page loads and updates immediately after a successful save, so reloading the page can confirm that the count persisted.
 
-Saved locations use the `locationMap.savedLocations` key as a JSON array. Each record has `name`, numeric `latitude`, numeric `longitude`, numeric `accuracy`, and an ISO 8601 `timestamp`, ready for a possible future CSV export. The stored accuracy is the unrounded browser value; only the dialog display rounds it to the nearest meter.
+Saved locations use the `locationMap.savedLocations` key as a JSON array. Each record has `name`, numeric `latitude`, numeric `longitude`, numeric `accuracy`, and an ISO 8601 `timestamp`. Version 0.4 exports these fields to CSV. The stored accuracy is the unrounded browser value; only the dialog display rounds it to the nearest meter.
 
-Saved locations remain only in that browser and device, for that site's origin. They are not uploaded to GitHub, written to `README.md` or a project CSV file, synchronized between devices, or stored on a server. Clearing the browser's site data may remove them. Malformed saved JSON is handled as an empty array when saving a new location. Version 0.3 does not export CSV.
+In Version 0.3, saved locations remain only in that browser and device, for that site's origin. They are not uploaded to GitHub, written to `README.md` or a project CSV file, synchronized between devices, or stored on a server. Clearing the browser's site data may remove them. Malformed saved JSON is handled as an empty array when saving a new location. Version 0.3 does not export CSV.
 
 Version 0.3 passed desktop browser and iPhone HTTPS testing through the deployed GitHub Pages site. Testing confirmed continuous geolocation, Save Location, frozen snapshots while tracking continues, named records in `localStorage`, and the Saved locations counter, including persistence after reloading the page.
 
 ## Version 0.4 functionality
 
-- **Export CSV** exports all currently saved records from `locationMap.savedLocations` with `name`, `latitude`, `longitude`, `accuracy`, and `timestamp` columns. The file is generated and downloaded entirely in the browser, with proper CSV escaping and a filename based on the device's local date and time: `saved-locations-YYYY-MM-DD-HHMMSS.csv`. The time distinguishes batches exported at different seconds on the same day. No backend or external CSV library is used. Stored record timestamps remain the original ISO 8601 values captured with each location.
+- **Export CSV** exports all currently saved records from `locationMap.savedLocations` with `name`, `latitude`, `longitude`, `accuracy`, and `timestamp` columns. The file is generated and downloaded entirely in the browser with proper CSV escaping. No backend or external CSV library is used. Stored record timestamps remain the original ISO 8601 values captured with each location.
+- The filename is `saved-locations-YYYY-MM-DD-HHMMSS.csv`, for example `saved-locations-2026-09-30-191845.csv`. It uses the device/browser local date and time at export, a 24-hour clock, and zero-padded values. It contains no colons, slashes, or spaces; the time distinguishes batches exported at different seconds on the same day.
 - Export CSV is disabled when there are no saved records or the stored data is malformed.
 - After the download is initiated successfully, the app writes an empty array (`[]`) to `locationMap.savedLocations`. The Saved locations counter returns to zero and Export CSV becomes disabled. The downloaded CSV is the archive of that batch.
 - Saving a new location starts another collection cycle: the counter increases and Export CSV becomes available again. If CSV preparation or download initiation fails, saved records are retained. If clearing storage fails after initiation, the app reports that the download started but the records remain stored.
+
+Version 0.4 passed laptop/browser and iPhone HTTPS testing through the deployed GitHub Pages site. Testing confirmed saved records in `localStorage`, CSV generation and contents, export-and-clear behavior, the counter returning to zero, Export CSV disabling after export, and a new collection cycle after another save. The local date-and-time filenames were validated for multiple batches on the same day.
 
 ## Accuracy classification
 
@@ -77,7 +80,7 @@ Open `http://localhost:8000` on the same computer and allow location access. The
 
 ## GitHub Pages deployment
 
-Version 0.2 and Version 0.3 have been deployed and tested using GitHub Pages for HTTPS mobile testing. Version 0.3's deployed site passed iPhone testing. Version 0.4 remains a static site compatible with the same deployment approach. The general workflow is:
+Versions 0.2, 0.3, and 0.4 have been deployed and tested using GitHub Pages for HTTPS mobile testing. Version 0.4 passed iPhone HTTPS testing on the deployed site. The general workflow is:
 
 ```text
 Local development → Git commit → Git push to main → GitHub Pages deployment → HTTPS mobile testing
@@ -142,11 +145,14 @@ The separate status message provides more detail. The map remains visible if geo
 - Desktop browser and iPhone HTTPS testing passed. The GitHub Pages deployment was validated.
 - Version 0.3 is approved as the stable baseline for Version 0.4.
 
-### Version 0.4 — current implementation
+### Version 0.4 — approved and validated stable baseline
 
-- Added CSV export using existing `localStorage` data, generated entirely in the browser.
-- After successful export initiation, clears the saved-location array, resets the counter to zero, and disables Export CSV until a new location is saved.
-- Each export creates one downloaded batch archive and starts a new collection cycle.
+- Added Export CSV. It reads saved records from `locationMap.savedLocations` and exports `name`, `latitude`, `longitude`, `accuracy`, and `timestamp`.
+- Generates the CSV entirely in the browser with proper escaping, without a backend or external CSV library. CSV contents were validated.
+- Uses the device's local date and time in `saved-locations-YYYY-MM-DD-HHMMSS.csv`, giving batches exported at different seconds on the same day distinguishable filenames.
+- After successful download initiation, writes `[]` to `locationMap.savedLocations`, resets the Saved locations counter to zero, and disables Export CSV until a new location is saved.
+- Each export is a batch/archive cycle; saving another location starts a new cycle.
+- Laptop/browser, iPhone HTTPS, and GitHub Pages deployment testing passed. Version 0.4 is approved as the current stable baseline.
 
 ## Known limitations
 
@@ -155,8 +161,8 @@ The separate status message provides more detail. The map remains visible if geo
 - Continuous high-accuracy geolocation may use additional battery power.
 - Mobile browsers and operating systems may limit background tracking.
 - OpenStreetMap tiles and the Leaflet CDN require internet access; public tile availability is best-effort.
-- No route history is stored. There is no backend or database. Saved locations persist only in the current browser's site storage and may be removed if that site data is cleared.
-- There is no CSV import or saved-location list yet. The browser initiates downloads but cannot confirm that the user retained the downloaded file.
+- No route history is stored. There is no backend, database, or cloud synchronization. Before export, saved locations persist only in the current browser's site storage and may be removed if that site data is cleared.
+- There is no CSV import, saved-location list, or edit/delete functionality. The browser initiates downloads but cannot confirm that the user retained the downloaded file.
 
 ## Out-of-scope features
 
