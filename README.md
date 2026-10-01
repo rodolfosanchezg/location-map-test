@@ -6,7 +6,7 @@ My Location Map is a lightweight browser geolocation test application. It uses H
 
 ## Current version
 
-**Version 0.61 is the current implementation on the approved Version 0.6 stable baseline.** Version 0.5 remains the approved CSV marker-loading baseline; Version 0.4 remains the approved CSV export baseline; Version 0.3 remains the approved named-location and `localStorage` baseline; Version 0.2 remains the approved continuous-tracking baseline; Version 0.1 remains the original approved baseline for one-time location behavior.
+**Version 0.61 — approved and validated stable baseline.** Version 0.6 remains the approved routing baseline; Version 0.5 remains the approved CSV marker-loading baseline; Version 0.4 remains the approved CSV export baseline; Version 0.3 remains the approved named-location and `localStorage` baseline; Version 0.2 remains the approved continuous-tracking baseline; Version 0.1 remains the original approved baseline for one-time location behavior.
 
 ## Version 0.2 functionality
 
@@ -72,7 +72,9 @@ Version 0.6 passed laptop/browser and iPhone/mobile testing through a local HTTP
 - The Save Location dialog now has a required, single-line **Address** field after Location name. It accepts normal address text, including letters, numbers, spaces, `-`, `#`, commas, and periods. Leading and trailing spaces are trimmed; an empty address is rejected, and the limit is 150 characters. The app does not verify or look up the address.
 - New records in `locationMap.savedLocations` include `address` alongside the existing name, numeric coordinates, accuracy, and timestamp. Older records without `address` remain usable and export with an empty address. Saving clears both editable fields and closes the dialog; Cancel and Escape save nothing.
 - Export CSV now uses `name,address,latitude,longitude,accuracy,timestamp`. Address values with commas or quotes are CSV-escaped. The filename and export-and-clear cycle are unchanged.
-- The fixed root `locations.csv` loader accepts both the previous five-column header (`name,latitude,longitude,accuracy,timestamp`) and the new six-column header. Marker labels still display only `name`. Routing still uses the latest live GPS coordinates and the selected CSV marker's latitude/longitude; the address is informational only.
+- The fixed root `locations.csv` loader accepts both the previous five-column header (`name,latitude,longitude,accuracy,timestamp`) and the new six-column header (`name,address,latitude,longitude,accuracy,timestamp`). Marker labels still display only `name`. Routing still uses the latest live GPS coordinates and the selected CSV marker's latitude/longitude; the address is informational only. Version 0.6 geolocation and routing behavior is unchanged.
+
+Version 0.61 is approved and validated as the current stable baseline.
 
 ## Accuracy classification
 
@@ -205,11 +207,11 @@ The separate status message provides more detail. The map remains visible if geo
 - Laptop/browser, iPhone/mobile, and local HTTPS Cloudflare Tunnel testing passed. CSV markers, route calculation and drawing, destination selection, distance, walking time, route replacement, Clear Route, and continued live GPS updates were validated.
 - The testing API key remains local in ignored `js/config.js`. Public deployment of the routing key is intentionally deferred. Version 0.6 is approved and validated as the stable baseline.
 
-### Version 0.61 — current implementation
+### Version 0.61 — approved and validated stable baseline
 
-- Added a required Address field to the Save Location dialog; new saved location records include `address`.
-- CSV export includes the address column. CSV loading remains compatible with older five-column files without addresses.
-- Marker labels and coordinate-based walking routing are unchanged.
+- Added a required Address field to Save Location; new saved records include `address` under the existing `locationMap.savedLocations` key.
+- CSV export includes address. CSV loading supports both legacy five-column files and Version 0.61 six-column files; older saved records without address remain compatible.
+- Marker labels still use `name`, routing remains coordinate-based, and existing Version 0.6 functionality is preserved. Version 0.61 is approved and validated.
 
 ## Known limitations
 
@@ -222,6 +224,7 @@ The separate status message provides more detail. The map remains visible if geo
 - There is no CSV upload from the device, saved-location list, or edit/delete functionality. The browser initiates downloads but cannot confirm that the user retained the downloaded file.
 - Version 0.5 depends on `locations.csv` being available from the site. It reads only that root file and never writes changes back to it. There is no CSV upload selector, import from phone storage, support for multiple CSV files, filters, search, marker categories/colors, or editing/deleting individual CSV markers.
 - Version 0.6 routing needs the local testing API key, network access, and an available openrouteservice walking route. API errors or quota limits can prevent a route from appearing. The key is exposed to users of the local test site, so routing is not publicly deployed with it; no protected API proxy exists yet.
+- Version 0.61 does not look up, verify, or autocomplete addresses. It has no reverse geocoding, address validation API, or separate city, state, or postal code fields. No backend or database is available for address data.
 
 ## Out-of-scope features
 
