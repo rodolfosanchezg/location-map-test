@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/style.css?v=9">
     <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script defer src="js/config.js?v=1"></script>
-    <script defer src="js/app.js?v=12"></script>
+    <script defer src="js/app.js?v=13"></script>
   </head>
   <body>
     <main>
@@ -49,6 +49,8 @@
         <input id="snapshot-accuracy" type="text" readonly>
         <label for="location-name">Location name</label>
         <input id="location-name" type="text" required maxlength="80" autofocus>
+        <label for="location-address">Address</label>
+        <input id="location-address" type="text" required maxlength="150">
         <p id="save-error" role="alert"></p>
         <div class="dialog-actions">
           <button id="cancel-save" type="button">Cancel</button>

@@ -6,7 +6,7 @@ My Location Map is a lightweight browser geolocation test application. It uses H
 
 ## Current version
 
-**Version 0.6 — approved and validated stable baseline.** Version 0.5 remains the approved CSV marker-loading baseline; Version 0.4 remains the approved CSV export baseline; Version 0.3 remains the approved named-location and `localStorage` baseline; Version 0.2 remains the approved continuous-tracking baseline; Version 0.1 remains the original approved baseline for one-time location behavior.
+**Version 0.61 is the current implementation on the approved Version 0.6 stable baseline.** Version 0.5 remains the approved CSV marker-loading baseline; Version 0.4 remains the approved CSV export baseline; Version 0.3 remains the approved named-location and `localStorage` baseline; Version 0.2 remains the approved continuous-tracking baseline; Version 0.1 remains the original approved baseline for one-time location behavior.
 
 ## Version 0.2 functionality
 
@@ -67,6 +67,13 @@ The openrouteservice testing API key is stored locally in `js/config.js`. That f
 
 Version 0.6 passed laptop/browser and iPhone/mobile testing through a local HTTPS Cloudflare Tunnel. Testing confirmed CSV markers, walking route calculation to the selected destination, route drawing, destination name, walking distance, approximate walking time, route replacement when another marker is selected, Clear Route, and continued live GPS updates while a route remains static. Version 0.6 is approved and validated as the stable baseline.
 
+## Version 0.61 functionality
+
+- The Save Location dialog now has a required, single-line **Address** field after Location name. It accepts normal address text, including letters, numbers, spaces, `-`, `#`, commas, and periods. Leading and trailing spaces are trimmed; an empty address is rejected, and the limit is 150 characters. The app does not verify or look up the address.
+- New records in `locationMap.savedLocations` include `address` alongside the existing name, numeric coordinates, accuracy, and timestamp. Older records without `address` remain usable and export with an empty address. Saving clears both editable fields and closes the dialog; Cancel and Escape save nothing.
+- Export CSV now uses `name,address,latitude,longitude,accuracy,timestamp`. Address values with commas or quotes are CSV-escaped. The filename and export-and-clear cycle are unchanged.
+- The fixed root `locations.csv` loader accepts both the previous five-column header (`name,latitude,longitude,accuracy,timestamp`) and the new six-column header. Marker labels still display only `name`. Routing still uses the latest live GPS coordinates and the selected CSV marker's latitude/longitude; the address is informational only.
+
 ## Accuracy classification
 
 | Browser-reported accuracy | Location quality |
@@ -86,7 +93,7 @@ A desktop computer may report coarse positioning, including accuracy measured in
 
 ## Continuous tracking behavior
 
-Versions 0.2 through 0.6 use `navigator.geolocation.watchPosition()` and keep one active watch ID internally. The browser and operating system determine when a new location update is produced; the application does not request positions at a fixed interval. Tracking continues while the Save Location dialog is open. Updates may slow or stop while the page is in the background.
+Versions 0.2 through 0.61 use `navigator.geolocation.watchPosition()` and keep one active watch ID internally. The browser and operating system determine when a new location update is produced; the application does not request positions at a fixed interval. Tracking continues while the Save Location dialog is open. Updates may slow or stop while the page is in the background.
 
 ## HTTPS requirement
 
@@ -198,6 +205,12 @@ The separate status message provides more detail. The map remains visible if geo
 - Laptop/browser, iPhone/mobile, and local HTTPS Cloudflare Tunnel testing passed. CSV markers, route calculation and drawing, destination selection, distance, walking time, route replacement, Clear Route, and continued live GPS updates were validated.
 - The testing API key remains local in ignored `js/config.js`. Public deployment of the routing key is intentionally deferred. Version 0.6 is approved and validated as the stable baseline.
 
+### Version 0.61 — current implementation
+
+- Added a required Address field to the Save Location dialog; new saved location records include `address`.
+- CSV export includes the address column. CSV loading remains compatible with older five-column files without addresses.
+- Marker labels and coordinate-based walking routing are unchanged.
+
 ## Known limitations
 
 - Accuracy depends on the device, available positioning sources, and environment.
@@ -212,4 +225,4 @@ The separate status message provides more detail. The map remains visible if geo
 
 ## Out-of-scope features
 
-Version 0.6 does not include a CSV upload selector or device-file import, multiple CSV files, a saved-location list, editing or deleting saved locations, marker categories, route history, automatic rerouting, turn-by-turn directions, route saving, distance traveled, speed, heading visualization, a backend, a database, an API proxy, GitHub repository writing, cloud storage, user accounts, location synchronization, address lookup, or route optimization. These are potential future-version features only.
+Version 0.61 does not include a CSV upload selector or device-file import, multiple CSV files, a saved-location list, editing or deleting saved locations, marker categories, route history, automatic rerouting, turn-by-turn directions, route saving, distance traveled, speed, heading visualization, a backend, a database, an API proxy, GitHub repository writing, cloud storage, user accounts, location synchronization, address lookup, or route optimization. These are potential future-version features only.

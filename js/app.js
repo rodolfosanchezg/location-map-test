@@ -21,6 +21,7 @@ const csvMarkersLayer = L.featureGroup().addTo(map);
 const savedLocationsKey = "locationMap.savedLocations";
 const saveDialog = document.getElementById("save-location-dialog");
 const locationNameInput = document.getElementById("location-name");
+const locationAddressInput = document.getElementById("location-address");
 let watchId = null;
 let usingStandardAccuracy = false;
 let receivedPosition = false;
@@ -92,6 +93,7 @@ function openSaveLocationDialog() {
 function resetSaveLocationDialog() {
   pendingSnapshot = null;
   locationNameInput.value = "";
+  locationAddressInput.value = "";
   document.getElementById("save-error").textContent = "";
 }
 
@@ -114,6 +116,7 @@ function getSavedLocations() {
 function isSavedLocationRecord(location) {
   return location !== null && typeof location === "object" &&
     typeof location.name === "string" && location.name.trim() !== "" &&
+    (location.address === undefined || typeof location.address === "string") &&
     Number.isFinite(location.latitude) &&
     Number.isFinite(location.longitude) &&
     Number.isFinite(location.accuracy) && location.accuracy >= 0 &&
@@ -147,15 +150,22 @@ function saveLocationSnapshot(event) {
   if (!pendingSnapshot) return;
 
   const name = locationNameInput.value.trim();
+  const address = locationAddressInput.value.trim();
   if (!name || name.length > 80) {
     document.getElementById("save-error").textContent =
       "Enter a location name of up to 80 characters.";
     locationNameInput.focus();
     return;
   }
+  if (!address || address.length > 150) {
+    document.getElementById("save-error").textContent =
+      "Enter an address of up to 150 characters.";
+    locationAddressInput.focus();
+    return;
+  }
 
   const locations = getSavedLocations();
-  locations.push({ name, ...pendingSnapshot });
+  locations.push({ name, address, ...pendingSnapshot });
   if (!setSavedLocations(locations)) {
     document.getElementById("save-error").textContent =
       "Could not save the location in this browser.";
@@ -173,9 +183,9 @@ function escapeCsvValue(value) {
 }
 
 function buildCsv(locations) {
-  const columns = ["name", "latitude", "longitude", "accuracy", "timestamp"];
+  const columns = ["name", "address", "latitude", "longitude", "accuracy", "timestamp"];
   const rows = locations.map(location =>
-    columns.map(column => escapeCsvValue(location[column])).join(",")
+    columns.map(column => escapeCsvValue(column === "address" ? location.address ?? "" : location[column])).join(",")
   );
   return [columns.join(","), ...rows].join("\r\n") + "\r\n";
 }
@@ -277,12 +287,15 @@ function parseCsv(csvText) {
   return rows;
 }
 
-function validateCsvLocation(row) {
-  if (row.length !== 5 || !row[0].trim() || !row[1].trim() || !row[2].trim()) return null;
+function validateCsvLocation(row, hasAddress) {
+  const latitudeIndex = hasAddress ? 2 : 1;
+  const longitudeIndex = hasAddress ? 3 : 2;
+  if (row.length !== (hasAddress ? 6 : 5) || !row[0].trim() ||
+      !row[latitudeIndex].trim() || !row[longitudeIndex].trim()) return null;
   const decimal = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
-  if (!decimal.test(row[1].trim()) || !decimal.test(row[2].trim())) return null;
-  const latitude = Number(row[1]);
-  const longitude = Number(row[2]);
+  if (!decimal.test(row[latitudeIndex].trim()) || !decimal.test(row[longitudeIndex].trim())) return null;
+  const latitude = Number(row[latitudeIndex]);
+  const longitude = Number(row[longitudeIndex]);
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude) ||
       latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
   return { name: row[0], latitude, longitude };
@@ -314,11 +327,14 @@ async function loadCsvLocations() {
     const response = await fetch("locations.csv");
     if (!response.ok) return;
     const rows = parseCsv(await response.text());
-    if (rows.length === 0 || rows[0].join(",") !== "name,latitude,longitude,accuracy,timestamp") return;
+    if (rows.length === 0) return;
+    const header = rows[0].join(",");
+    const hasAddress = header === "name,address,latitude,longitude,accuracy,timestamp";
+    if (!hasAddress && header !== "name,latitude,longitude,accuracy,timestamp") return;
 
     for (const row of rows.slice(1)) {
       if (row.every(value => value.trim() === "")) continue;
-      const location = validateCsvLocation(row);
+      const location = validateCsvLocation(row, hasAddress);
       if (location) addCsvMarker(location);
     }
     updateCsvLocationsCount();
