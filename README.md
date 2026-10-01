@@ -6,7 +6,7 @@ My Location Map is a lightweight browser geolocation test application. It uses H
 
 ## Current version
 
-**Version 0.5 is the current implementation.** Version 0.4 remains the approved and validated stable baseline; Version 0.3 remains the approved named-location and `localStorage` baseline; Version 0.2 remains the approved continuous-tracking baseline; Version 0.1 remains the original approved baseline for one-time location behavior.
+**Version 0.5 — approved and validated stable baseline.** Version 0.4 remains the approved CSV export baseline; Version 0.3 remains the approved named-location and `localStorage` baseline; Version 0.2 remains the approved continuous-tracking baseline; Version 0.1 remains the original approved baseline for one-time location behavior.
 
 ## Version 0.2 functionality
 
@@ -51,7 +51,9 @@ Version 0.4 passed laptop/browser and iPhone HTTPS testing through the deployed 
 - The **CSV locations** counter shows the number of displayed CSV markers. After loading valid markers, the map fits their bounds once and live GPS updates continue without recentering the CSV overview. If the file is missing, empty, or has no valid records, the counter stays at zero and tracking continues.
 - **Clear Map** removes only the CSV markers and their labels and resets the CSV counter. It does not change `locations.csv`, `localStorage`, saved Version 0.4 locations, or live GPS tracking. Refreshing the page reads the unchanged CSV again and restores its valid markers.
 
-The included `locations.csv` contains only the header. To display locations, copy a downloaded Version 0.4 CSV batch into the project root as `locations.csv`, then reload the page. For GitHub Pages, publish that root file with the site. CSV loading requires the local server or a deployed site; the app cannot modify the file from the browser.
+The root `locations.csv` currently contains saved location records. To display a different batch, replace that root file with a downloaded Version 0.4 CSV batch and reload the page. For GitHub Pages, publish the updated root file with the site. CSV loading requires the local server or a deployed site; the app cannot modify the file from the browser.
+
+Version 0.5 passed laptop/browser and iPhone HTTPS testing through the deployed GitHub Pages site. Testing confirmed automatic CSV loading, permanently labeled markers, the CSV locations counter, automatic map fitting, Clear Map removing only CSV markers, restoration after refresh, and continued live GPS tracking.
 
 ## Accuracy classification
 
@@ -90,7 +92,7 @@ Open `http://localhost:8000` on the same computer and allow location access. The
 
 ## GitHub Pages deployment
 
-Versions 0.2, 0.3, and 0.4 have been deployed and tested using GitHub Pages for HTTPS mobile testing. Version 0.4 passed iPhone HTTPS testing on the deployed site. Version 0.5 remains a static site compatible with the same deployment approach. The general workflow is:
+Versions 0.2 through 0.5 have been deployed and tested using GitHub Pages for HTTPS mobile testing. Version 0.5 passed iPhone HTTPS testing on the deployed site. The general workflow is:
 
 ```text
 Local development → Git commit → Git push to main → GitHub Pages deployment → HTTPS mobile testing
@@ -165,12 +167,13 @@ The separate status message provides more detail. The map remains visible if geo
 - Each export is a batch/archive cycle; saving another location starts a new cycle.
 - Laptop/browser, iPhone HTTPS, and GitHub Pages deployment testing passed. Version 0.4 is approved as the stable baseline for Version 0.5.
 
-### Version 0.5 — current implementation
+### Version 0.5 — approved and validated stable baseline
 
-- Added automatic loading of the root `locations.csv` in the existing Version 0.4 CSV format.
-- Creates one permanently labeled marker for each valid location and fits the map to all loaded CSV markers once.
+- Added automatic loading of the root `locations.csv`, reusing the Version 0.4 CSV format.
+- Creates one permanently labeled marker per valid CSV location and fits the map to all imported markers once.
 - Added the CSV locations counter and Clear Map; clearing removes only imported CSV markers and labels.
-- Refreshing reloads markers from the unchanged CSV file. Live GPS tracking remains active.
+- Refresh restores markers from the unchanged CSV file, while live GPS tracking continues.
+- Laptop/browser, iPhone HTTPS, and GitHub Pages deployment testing passed. Version 0.5 is approved and validated as the current stable baseline.
 
 ## Known limitations
 
@@ -181,7 +184,7 @@ The separate status message provides more detail. The map remains visible if geo
 - OpenStreetMap tiles and the Leaflet CDN require internet access; public tile availability is best-effort.
 - No route history is stored. There is no backend, database, or cloud synchronization. Before export, saved locations persist only in the current browser's site storage and may be removed if that site data is cleared.
 - There is no CSV upload from the device, saved-location list, or edit/delete functionality. The browser initiates downloads but cannot confirm that the user retained the downloaded file.
-- Version 0.5 reads one fixed CSV file from the site's root; it does not offer a file picker or write changes back to that file.
+- Version 0.5 depends on `locations.csv` being available from the site. It reads only that root file and never writes changes back to it. There is no CSV upload selector, import from phone storage, support for multiple CSV files, filters, search, marker categories/colors, or editing/deleting individual CSV markers.
 
 ## Out-of-scope features
 
