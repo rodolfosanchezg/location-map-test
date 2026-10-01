@@ -175,6 +175,14 @@ function buildCsv(locations) {
   return [columns.join(","), ...rows].join("\r\n") + "\r\n";
 }
 
+function generateCsvFilename() {
+  const now = new Date();
+  const pad = value => String(value).padStart(2, "0");
+  const date = `${String(now.getFullYear()).padStart(4, "0")}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  return `saved-locations-${date}-${time}.csv`;
+}
+
 function downloadCsv(csvText, filename) {
   const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" });
   const link = document.createElement("a");
@@ -206,8 +214,7 @@ function exportSavedLocationsToCsv() {
 
   try {
     const csvText = buildCsv(locations);
-    const filename = `saved-locations-${new Date().toISOString().slice(0, 10)}.csv`;
-    downloadCsv(csvText, filename);
+    downloadCsv(csvText, generateCsvFilename());
   } catch {
     document.getElementById("save-message").textContent = "Could not export saved locations.";
     return;

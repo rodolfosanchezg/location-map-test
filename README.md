@@ -35,7 +35,7 @@ Version 0.3 passed desktop browser and iPhone HTTPS testing through the deployed
 
 ## Version 0.4 functionality
 
-- **Export CSV** exports all currently saved records from `locationMap.savedLocations` with `name`, `latitude`, `longitude`, `accuracy`, and `timestamp` columns. The file is generated and downloaded entirely in the browser, with proper CSV escaping and a date-based filename. No backend or external CSV library is used.
+- **Export CSV** exports all currently saved records from `locationMap.savedLocations` with `name`, `latitude`, `longitude`, `accuracy`, and `timestamp` columns. The file is generated and downloaded entirely in the browser, with proper CSV escaping and a filename based on the device's local date and time: `saved-locations-YYYY-MM-DD-HHMMSS.csv`. The time distinguishes batches exported at different seconds on the same day. No backend or external CSV library is used. Stored record timestamps remain the original ISO 8601 values captured with each location.
 - Export CSV is disabled when there are no saved records or the stored data is malformed.
 - After the download is initiated successfully, the app writes an empty array (`[]`) to `locationMap.savedLocations`. The Saved locations counter returns to zero and Export CSV becomes disabled. The downloaded CSV is the archive of that batch.
 - Saving a new location starts another collection cycle: the counter increases and Export CSV becomes available again. If CSV preparation or download initiation fails, saved records are retained. If clearing storage fails after initiation, the app reports that the download started but the records remain stored.
